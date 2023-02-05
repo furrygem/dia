@@ -1,0 +1,11 @@
+outputs:
+  - output_name: main.log
+    levels:
+      - trace
+      - debug
+      - info
+      - warn
+      - error
+      - fatal
+      - panic
+    formatter: "json"
