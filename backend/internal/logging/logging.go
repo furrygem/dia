@@ -61,7 +61,12 @@ func GetLogger() *logrus.Logger {
 func InitLogger(configFile string) error {
 	logger := GetLogger()
 	cfg := LogConfig{}
-	cfg.FromYAML(configFile)
+	if configFile != "" {
+		err := cfg.FromYAML(configFile)
+		if err != nil {
+			return err
+		}
+	}
 	outputs, err := cfg.ListOutputsNames()
 	if err != nil {
 		return err

@@ -9,14 +9,16 @@ import (
 )
 
 var configPath string
+var loggingConfigPath string
 
 func init() {
 	flag.StringVar(&configPath, "config", "", "Path to configuration file")
+	flag.StringVar(&loggingConfigPath, "logging-config", "", "Path to logging configuration file")
 	flag.Parse()
 }
 
 func main() {
-	err := logging.InitLogger("logconfig.yaml")
+	err := logging.InitLogger(loggingConfigPath)
 	if err != nil {
 		log.Fatal(err)
 	}
