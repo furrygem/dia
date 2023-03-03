@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  dia-air:
+    image: cosmtrek/air
+    working_dir: /dia
+    volumes:
+      - ./:/dia
+    ports:
+      - 8000:8000

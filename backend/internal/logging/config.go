@@ -10,14 +10,13 @@ import (
 )
 
 type LogConfig struct {
-	Outputs               []Output `yaml:"outputs"`
-	DiscardDefaultLogging bool     `yaml:"discard_default_logging"`
+	Outputs               map[string]Output `yaml:"outputs"`
+	DiscardDefaultLogging bool              `yaml:"discard_default_logging"`
 }
 
 type Output struct {
-	OutputName string   `yaml:"output_name"`
-	Levels     []string `yaml:"levels"`
-	Formatter  string   `yaml:"formatter"`
+	Levels    []string `yaml:"levels"`
+	Formatter string   `yaml:"formatter"`
 }
 
 func (c *LogConfig) FromYAML(file string) error {
@@ -34,8 +33,8 @@ func (c *LogConfig) FromYAML(file string) error {
 }
 
 func (c *LogConfig) GetLogLevels(outputName string) ([]logrus.Level, error) {
-	for _, output := range c.Outputs {
-		if output.OutputName == outputName {
+	for on, output := range c.Outputs {
+		if on == outputName {
 			levels := []logrus.Level{}
 			for _, textLevel := range output.Levels {
 				level, err := logrus.ParseLevel(textLevel)
@@ -52,15 +51,15 @@ func (c *LogConfig) GetLogLevels(outputName string) ([]logrus.Level, error) {
 
 func (c *LogConfig) ListOutputsNames() ([]string, error) {
 	outputs := []string{}
-	for _, output := range c.Outputs {
-		outputs = append(outputs, output.OutputName)
+	for on := range c.Outputs {
+		outputs = append(outputs, on)
 	}
 	return outputs, nil
 }
 
 func (c *LogConfig) GetLogFormatter(outputName string) (logrus.Formatter, error) {
-	for _, output := range c.Outputs {
-		if output.OutputName == outputName {
+	for on, output := range c.Outputs {
+		if on == outputName {
 			switch strings.ToLower(output.Formatter) {
 			case "json":
 				return &logrus.JSONFormatter{}, nil

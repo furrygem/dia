@@ -4,25 +4,25 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/furrygem/dia/internal/logging"
+	"github.com/furrygem/dia/internal/pubkeys"
 	"github.com/julienschmidt/httprouter"
-	"github.com/sirupsen/logrus"
 )
 
 type Server struct {
+	http.Server
 	Config   *ServerConfig
 	listener *net.Listener
-	Handler  *httprouter.Router
-	Logger   *logrus.Logger
-	http.Server
+	Router   *httprouter.Router
 }
 
 func NewServer(config *ServerConfig) (*Server, error) {
 	server := &Server{
-		Config:  config,
-		Handler: httprouter.New(),
-		Logger:  logging.GetLogger(),
+		Config: config,
+		Router: httprouter.New(),
+		Server: http.Server{},
 	}
 	return server, nil
 }
@@ -50,13 +50,34 @@ func (s *Server) getListener() (*net.Listener, error) {
 	return s.listener, nil
 }
 
-func (s *Server) ListenAndServe() error {
-	_, err := s.getListener()
+func (s *Server) addHandlers() {
+	logger := logging.GetLogger()
+	prefix, pkhs := pubkeys.NewPubKeyHandlers().AllRoutes()
+	for _, handler := range pkhs {
+		concatURL, err := url.JoinPath(prefix, handler.Path)
+		logger.Infof("Registerig handle %s", concatURL)
+		if err != nil {
+			logger.Fatal(err.Error())
+		}
+		s.Router.Handle(handler.Method, concatURL, handler.Handler)
+	}
+}
+
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var handle http.Handler
+	handle = s.Router
+	handle = loggingMiddleware(handle)
+	handle.ServeHTTP(w, r)
+}
+
+func (s *Server) Start() error {
+	logger := logging.GetLogger()
+	listener, err := s.getListener()
+	s.addHandlers()
+	s.Server.Handler = s
 	if err != nil {
 		return err
 	}
-	s.Logger.Infof("Starting listener")
-	s.Serve(*s.listener)
-	return nil
-
+	logger.Infof("Listening on %s:%d", s.Config.BindAddr, s.Config.ListenPort)
+	return s.Serve(*listener)
 }

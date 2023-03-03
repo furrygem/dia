@@ -33,6 +33,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	s.ListenAndServe()
+	logger := logging.GetLogger()
+	logger.Fatal(s.Start())
 
 }
