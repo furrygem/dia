@@ -2,6 +2,7 @@ package pubkeys
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/furrygem/dia/internal/handlers"
 	"github.com/furrygem/dia/internal/logging"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/julienschmidt/httprouter"
@@ -35,6 +37,11 @@ func (pkh *PubKeysHandlers) AllRoutes() (string, []handlers.Route) {
 			Path:    "/",
 			Handler: pkh.UploadPublicKey,
 		},
+		{
+			Method:  "GET",
+			Path:    "/:pk",
+			Handler: pkh.GetPublicKey,
+		},
 	}
 }
 
@@ -47,36 +54,61 @@ func (pkh *PubKeysHandlers) UploadPublicKey(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 		return
 	}
+	defer r.Body.Close()
 	fprinthex, err := pkh.service.writePublicKey(keyBytes, ctx)
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.Warn(err.Error())
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
 			if pgErr.Code == "23505" {
 				http.Error(w, fmt.Sprintf("Key with fingerprint %s already exists", fprinthex), http.StatusConflict)
 				return
 			}
-			logger.Warn("%s %s", pgErr.Code, pgErr.Detail)
-			http.Error(w, "Bad request", http.StatusBadRequest)
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 			return
 		}
-		logger.Warn(err.Error())
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 		return
 	}
 	pk := PublicKey{
 		Fingerprint: fprinthex,
 		Key:         fmt.Sprintf("%s", keyBytes),
 	}
-	marshaled, err := json.MarshalIndent(pk, "", "\t")
-	if err != nil {
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(pk); err != nil {
 		logger.Error(err.Error())
-		http.Error(w, "Error marshaling reponse", http.StatusInternalServerError)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	w.Write(marshaled)
+}
 
+// TODO: When implemented users this should query the user_public_key table with user ID and key title
+func (pkh *PubKeysHandlers) GetPublicKey(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	logger := logging.GetLogger()
+	ctx := context.Background()
+	fingerprint := params.ByName("pk")
+	fprint, err := hex.DecodeString(fingerprint)
+	logger.Debug(fprint)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		return
+	}
+	pk, err := pkh.service.readPublicKey(fprint, ctx)
+	logger.Debug(pk)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, fmt.Sprintf("No publickey %X", fprint), http.StatusNotFound)
+			return
+		}
+		logger.Error(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	if err := json.NewEncoder(w).Encode(pk); err != nil {
+		logger.Error(err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
 }
 
 var h handlers.Handler = &PubKeysHandlers{}

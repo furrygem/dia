@@ -18,20 +18,24 @@ func NewPostgresRepository(pool *pgxpool.Pool) Repository {
 	}
 }
 
-func (r *repo) GetByFingerprint(fingerprint string, ctx context.Context) (*PublicKey, error) {
+func (r *repo) GetByFingerprint(fingerprint []byte, ctx context.Context) (*PublicKey, error) {
 	logger := logging.GetLogger()
+	logger.Debugf("Retrieving key %X", fingerprint)
 	logger.Info("executing")
-	result := r.pool.QueryRow(ctx, "SELECT fingerprint, publickey FROM publickeys WHERE fingerprint=$1", fingerprint)
+	result := r.pool.QueryRow(ctx, "SELECT fingerprint, publickey FROM publickeys WHERE fingerprint = $1", fingerprint)
 	pkey := &PublicKey{}
-	err := result.Scan(&pkey.Fingerprint, &pkey.Key)
+	var rawFingerprint []byte
+	err := result.Scan(&rawFingerprint, &pkey.Key)
+	pkey.Fingerprint = fmt.Sprintf("%X", rawFingerprint)
 	if err != nil {
+		logger.Debug(err)
 		return nil, err
 	}
 	return pkey, nil
 }
 
 func (r *repo) StorePublicKey(fingerprint []byte, publickey string, ctx context.Context) (string, error) {
-	_, err := r.pool.Exec(ctx, "INSERT INTO publickeys(fingerprint, publickey) VALUES ($1, $2)", fmt.Sprintf("%X", fingerprint), publickey)
+	_, err := r.pool.Exec(ctx, "INSERT INTO publickeys(fingerprint, publickey) VALUES ($1, $2)", fingerprint, publickey)
 	if err != nil {
 		return "", err
 	}

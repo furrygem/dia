@@ -3,7 +3,7 @@ package pubkeys
 import "context"
 
 type Reader interface {
-	GetByFingerprint(fingerprint string, ctx context.Context) (*PublicKey, error)
+	GetByFingerprint(fingerprint []byte, ctx context.Context) (*PublicKey, error)
 }
 
 type Writer interface {

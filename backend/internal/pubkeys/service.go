@@ -40,3 +40,13 @@ func (s *service) writePublicKey(requestBody []byte, ctx context.Context) (strin
 	}
 	return fprinthex, nil
 }
+
+func (s *service) readPublicKey(fingerprint []byte, ctx context.Context) (*PublicKey, error) {
+	logger := logging.GetLogger()
+	logger.Debugf("Reading key %X from database", fingerprint)
+	pk, err := s.repository.GetByFingerprint(fingerprint, ctx)
+	if err != nil {
+		return nil, err
+	}
+	return pk, nil
+}
