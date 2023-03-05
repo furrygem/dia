@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/furrygem/dia/internal/logging"
 	"github.com/furrygem/dia/internal/pubkeys"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -50,9 +52,10 @@ func (s *Server) getListener() (*net.Listener, error) {
 	return s.listener, nil
 }
 
-func (s *Server) addHandlers() {
+func (s *Server) addHandlers(pgpool *pgxpool.Pool) {
 	logger := logging.GetLogger()
-	prefix, pkhs := pubkeys.NewPubKeyHandlers().AllRoutes()
+	prefix, pkhs := pubkeys.NewPubKeyHandlers(pgpool).AllRoutes()
+	logger.Info(url.Parse)
 	for _, handler := range pkhs {
 		concatURL, err := url.JoinPath(prefix, handler.Path)
 		logger.Infof("Registerig handle %s", concatURL)
@@ -71,9 +74,13 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) Start() error {
+	pgpool, err := pgxpool.New(context.Background(), s.Config.PostgresConectionString)
+	if err != nil {
+		return err
+	}
 	logger := logging.GetLogger()
 	listener, err := s.getListener()
-	s.addHandlers()
+	s.addHandlers(pgpool)
 	s.Server.Handler = s
 	if err != nil {
 		return err

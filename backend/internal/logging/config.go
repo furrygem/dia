@@ -12,6 +12,7 @@ import (
 type LogConfig struct {
 	Outputs               map[string]Output `yaml:"outputs"`
 	DiscardDefaultLogging bool              `yaml:"discard_default_logging"`
+	GlobalLoggingLevel    string            `yaml:"global_logging_level"`
 }
 
 type Output struct {
@@ -30,6 +31,17 @@ func (c *LogConfig) FromYAML(file string) error {
 	}
 
 	return nil
+}
+
+func (c *LogConfig) GetGlobalLogLevel() (logrus.Level, error) {
+	if c.GlobalLoggingLevel == "" {
+		return logrus.InfoLevel, nil
+	}
+	level, err := logrus.ParseLevel(c.GlobalLoggingLevel)
+	if err != nil {
+		return logrus.InfoLevel, err
+	}
+	return level, nil
 }
 
 func (c *LogConfig) GetLogLevels(outputName string) ([]logrus.Level, error) {
