@@ -67,6 +67,11 @@ func InitLogger(configFile string) error {
 			return err
 		}
 	}
+	level, err := cfg.GetGlobalLogLevel()
+	if err != nil {
+		return err
+	}
+	logger.SetLevel(level)
 	outputs, err := cfg.ListOutputsNames()
 	if err != nil {
 		return err

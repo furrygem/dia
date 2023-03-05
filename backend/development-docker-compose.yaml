@@ -2,9 +2,24 @@ version: '3.8'
 
 services:
   dia-air:
-    image: cosmtrek/air
+    image: cosmtrek/air:v1.41.0
     working_dir: /dia
     volumes:
       - ./:/dia
     ports:
       - 8000:8000
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: insecure
+      POSTGRES_USER: postgres
+      POSTGRES_DB: dia
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
