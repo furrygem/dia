@@ -42,8 +42,8 @@ func (r *repo) GetUserByUsername(username string, ctx context.Context) (*User, e
 }
 func (r *repo) UsernameExists(username string, ctx context.Context) (bool, error) {
 	logger := logging.GetLogger()
-	logger.Debug("Checking if username %s exists", username)
-	result := r.pool.QueryRow(ctx, "exists(SELECT 1 FROM users WHERE username = $1)", username)
+	logger.Debugf("Checking if username \"%s\" exists", username)
+	result := r.pool.QueryRow(ctx, "SELECT EXISTS( SELECT 1 FROM users WHERE username = $1 )", username)
 	var exists bool
 	err := result.Scan(&exists)
 	if err != nil {

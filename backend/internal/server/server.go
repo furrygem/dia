@@ -55,9 +55,9 @@ func (s *Server) getListener() (*net.Listener, error) {
 
 func (s *Server) addHandlers(pgpool *pgxpool.Pool) {
 	logger := logging.GetLogger()
-	prefix, pkhs := pubkeys.NewPubKeyHandlers(pgpool).AllRoutes()
+	prefix, handlers := pubkeys.NewPubKeyHandlers(pgpool).AllRoutes()
 	logger.Info(url.Parse)
-	for _, handler := range pkhs {
+	for _, handler := range handlers {
 		concatURL, err := url.JoinPath(prefix, handler.Path)
 		logger.Infof("Registerig handle %s", concatURL)
 		if err != nil {
@@ -65,8 +65,8 @@ func (s *Server) addHandlers(pgpool *pgxpool.Pool) {
 		}
 		s.Router.Handle(handler.Method, concatURL, handler.Handler)
 	}
-	prefix, pkhs = users.NewUsersHandler(pgpool).AllRoutes()
-	for _, handler := range pkhs {
+	prefix, handlers = users.NewUsersHandler(pgpool).AllRoutes()
+	for _, handler := range handlers {
 		concatURL, err := url.JoinPath(prefix, handler.Path)
 		logger.Infof("Registerig handle %s", concatURL)
 		if err != nil {
