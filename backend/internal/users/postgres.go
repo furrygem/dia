@@ -43,9 +43,10 @@ func (r *repo) GetUserByUsername(username string, ctx context.Context) (*User, e
 func (r *repo) UsernameExists(username string, ctx context.Context) (bool, error) {
 	logger := logging.GetLogger()
 	logger.Debugf("Checking if username \"%s\" exists", username)
-	result := r.pool.QueryRow(ctx, "SELECT EXISTS( SELECT 1 FROM users WHERE username = $1 )", username)
+	result := r.pool.QueryRow(ctx, "SELECT EXISTS( SELECT * FROM users WHERE username = $1 )", username)
 	var exists bool
 	err := result.Scan(&exists)
+	logger.Debug(exists)
 	if err != nil {
 		logger.Info(err.Error())
 		return false, err
@@ -53,17 +54,17 @@ func (r *repo) UsernameExists(username string, ctx context.Context) (bool, error
 	return exists, nil
 }
 
-func (r *repo) InsertUser(username string, hashedPassword string, ctx context.Context) (*User, error) {
+func (r *repo) InsertUser(user *User, ctx context.Context) (*User, error) {
 	logger := logging.GetLogger()
-	logger.Debug("Inserting user with username=%s", username)
-	result := r.pool.QueryRow(ctx, "INSERT INTO users (username, pfp_url, active, hashed_password) VALUES ($1, $2, $3, $4) RETURNING id, username, pfp_url, created_at, updated_at, active, hashed_pasword")
-	user := &User{}
-	err := result.Scan(&user.Id, &user.Username, &user.PfpURL, &user.CreatedAt, &user.UpdatedAt, &user.Active, &user.HashedPassword)
+	logger.Debugf("Inserting user with username=%s", user.Username)
+	result := r.pool.QueryRow(ctx, "INSERT INTO users (id, username, pfp_url, active, hashed_password, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, username, pfp_url, created_at, updated_at, active, hashed_password", user.Id, user.Username, user.PfpURL, user.Active, user.HashedPassword, user.CreatedAt, user.UpdatedAt)
+	userCreated := &User{}
+	err := result.Scan(&userCreated.Id, &userCreated.Username, &userCreated.PfpURL, &userCreated.CreatedAt, &userCreated.UpdatedAt, &userCreated.Active, &userCreated.HashedPassword)
 	if err != nil {
-		logger.Info(err)
+		logger.Warn(err)
 		return nil, err
 	}
-	return user, nil
+	return userCreated, nil
 }
 func (r *repo) SetActive(id string, active bool, ctx context.Context) (bool, error) {
 	logger := logging.GetLogger()

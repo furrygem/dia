@@ -9,7 +9,7 @@ type Reader interface {
 }
 
 type Writer interface {
-	InsertUser(username string, hashedPassword string, ctx context.Context) (*User, error)
+	InsertUser(user *User, ctx context.Context) (*User, error)
 	SetActive(id string, active bool, ctx context.Context) (bool, error)
 	UpdatePassword(id string, hashedPassword string, ctx context.Context) (string, error)
 }
