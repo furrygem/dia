@@ -51,8 +51,17 @@ func (uh *UsersHandlers) RegisterUserHandler(w http.ResponseWriter, r *http.Requ
 		w.Write([]byte(err.Error()))
 		return
 	}
+	userDTO := UserDTO{
+		Id:        user.Id,
+		Username:  user.Username,
+		PfpURL:    user.PfpURL,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+		Active:    user.Active,
+	}
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(w).Encode(userDTO)
+
 }
 
 func (uh *UsersHandlers) TestHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

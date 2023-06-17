@@ -1,2 +1,4 @@
 discard_default_logging: false
 global_logging_level: debug
+users:
+  set_active_after_user_creation: false

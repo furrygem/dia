@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/furrygem/dia/internal/logging"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -55,20 +56,21 @@ func (s *service) registerUser(ctx context.Context, userCreate UserCreateDTO) (*
 		return nil, err
 	}
 	user.Id = strings.ReplaceAll(id.String(), "-", "")
-	if settings.SetActiveAfterUserCreation {
-		user.Active = true
-	} else {
-		user.Active = false
-	}
+	logger.Debugf("Will set active: %t", settings.SetActiveAfterUserCreation)
+	user.Active = settings.SetActiveAfterUserCreation
 	user.CreatedAt = time.Now().Local()
 	user.UpdatedAt = time.Now().Local()
 	userInserted, err := s.repository.InsertUser(&user, ctx)
 	if err != nil {
 		return nil, err
 	}
-	logger.Infof("Created user %s with ID %s", userInserted.Username, userInserted.Id)
+	logger.Infof("Inserted user %s with ID %s", userInserted.Username, userInserted.Id)
 	return userInserted, nil
 }
 
-func (s *service) loginUser() {
+func (s *service) loginUser(u *User) jwt.Token {
+	logger := logging.GetLogger()
+	claims := jwt.RegisteredClaims{
+		ExpiresAt: 10,
+	}
 }
