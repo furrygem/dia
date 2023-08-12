@@ -9,6 +9,7 @@ import (
 
 	"github.com/furrygem/dia/internal/logging"
 	"github.com/furrygem/dia/internal/pubkeys"
+	"github.com/furrygem/dia/internal/users"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/julienschmidt/httprouter"
 )
@@ -54,9 +55,18 @@ func (s *Server) getListener() (*net.Listener, error) {
 
 func (s *Server) addHandlers(pgpool *pgxpool.Pool) {
 	logger := logging.GetLogger()
-	prefix, pkhs := pubkeys.NewPubKeyHandlers(pgpool).AllRoutes()
+	prefix, handlers := pubkeys.NewPubKeyHandlers(pgpool).AllRoutes()
 	logger.Info(url.Parse)
-	for _, handler := range pkhs {
+	for _, handler := range handlers {
+		concatURL, err := url.JoinPath(prefix, handler.Path)
+		logger.Infof("Registerig handle %s", concatURL)
+		if err != nil {
+			logger.Fatal(err.Error())
+		}
+		s.Router.Handle(handler.Method, concatURL, handler.Handler)
+	}
+	prefix, handlers = users.NewUsersHandler(pgpool).AllRoutes()
+	for _, handler := range handlers {
 		concatURL, err := url.JoinPath(prefix, handler.Path)
 		logger.Infof("Registerig handle %s", concatURL)
 		if err != nil {

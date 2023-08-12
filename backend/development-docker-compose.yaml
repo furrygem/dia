@@ -8,6 +8,8 @@ services:
       - ./:/dia
     ports:
       - 8000:8000
+    environment:
+      - TZ=Europe/Moscow
 
   db:
     image: postgres
@@ -16,6 +18,8 @@ services:
       POSTGRES_PASSWORD: insecure
       POSTGRES_USER: postgres
       POSTGRES_DB: dia
+    ports:
+      - 15432:5432
 
   adminer:
     image: adminer

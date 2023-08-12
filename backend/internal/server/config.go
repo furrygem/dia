@@ -4,17 +4,19 @@ import (
 	"errors"
 	"io/ioutil"
 
+	"github.com/furrygem/dia/internal/users"
 	"gopkg.in/yaml.v3"
 )
 
 type ServerConfig struct {
-	BindAddr                string `yaml:"bind_address"`
-	ListenPort              uint16 `yaml:"listen_port"`
-	UseUnixSocketPath       bool   `yaml:"use_unix_socket_path"`
-	UnixSocketPath          string `yaml:"bind_unix_socket_path"`
-	CertificateFilePath     string `yaml:"certificate_file"`
-	KeyFilePath             string `yaml:"key_file"`
-	PostgresConectionString string `yaml:"postgres_connection_string"`
+	BindAddr                string          `yaml:"bind_address"`
+	ListenPort              uint16          `yaml:"listen_port"`
+	UseUnixSocketPath       bool            `yaml:"use_unix_socket_path"`
+	UnixSocketPath          string          `yaml:"bind_unix_socket_path"`
+	CertificateFilePath     string          `yaml:"certificate_file"`
+	KeyFilePath             string          `yaml:"key_file"`
+	PostgresConectionString string          `yaml:"postgres_connection_string"`
+	UsersSettings           *users.Settings `yaml:"users"`
 }
 
 func NewServerConfig() ServerConfig {
@@ -24,6 +26,7 @@ func NewServerConfig() ServerConfig {
 		UnixSocketPath:          "",
 		UseUnixSocketPath:       false,
 		PostgresConectionString: "postgres://postgres:insecure@db:5432/dia",
+		UsersSettings:           users.NewSettings(),
 	}
 
 	return sc

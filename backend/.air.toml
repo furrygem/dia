@@ -6,6 +6,6 @@ tmp_dir = "tmp"
 cmd = "go build -o tmp/app cmd/main/app.go"
 
 bin = "tmp/app"
-full_bin = "tmp/app --logging-config example_config.yaml"
+full_bin = "tmp/app --logging-config example_config.yaml --config example_config.yaml"
 
 exclude_dir = ["mongo-data"]

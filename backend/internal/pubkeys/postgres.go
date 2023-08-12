@@ -35,7 +35,7 @@ func (r *repo) GetByFingerprint(fingerprint []byte, ctx context.Context) (*Publi
 }
 
 func (r *repo) StorePublicKey(fingerprint []byte, publickey string, ctx context.Context) (string, error) {
-	_, err := r.pool.Exec(ctx, "INSERT INTO publickeys(fingerprint, publickey) VALUES ($1, $2)", fingerprint, publickey)
+	_, err := r.pool.Exec(ctx, "INSERT INTO publickeys(fingerprint, publickey) VALUES ($1, $2)", string(fingerprint), publickey)
 	if err != nil {
 		return "", err
 	}
