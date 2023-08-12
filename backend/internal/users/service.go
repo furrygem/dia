@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/furrygem/dia/internal/logging"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -68,9 +67,9 @@ func (s *service) registerUser(ctx context.Context, userCreate UserCreateDTO) (*
 	return userInserted, nil
 }
 
-func (s *service) loginUser(u *User) jwt.Token {
-	logger := logging.GetLogger()
-	claims := jwt.RegisteredClaims{
-		ExpiresAt: 10,
-	}
-}
+// func (s *service) loginUser(u *User) jwt.Token {
+// 	logger := logging.GetLogger()
+// 	claims := jwt.RegisteredClaims{
+// 		ExpiresAt: 10,
+// 	}
+// }

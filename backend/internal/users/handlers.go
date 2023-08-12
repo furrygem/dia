@@ -64,6 +64,17 @@ func (uh *UsersHandlers) RegisterUserHandler(w http.ResponseWriter, r *http.Requ
 
 }
 
+func (uh *UsersHandlers) LoginUserHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	userLoginDetails := &UserCreateDTO{}
+	err := json.NewDecoder(r.Body).Decode(userLoginDetails)
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	// TODO:Implement user login
+}
+
 func (uh *UsersHandlers) TestHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Write([]byte("Hello, users"))
 }
